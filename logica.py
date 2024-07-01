@@ -1,41 +1,92 @@
-# logica.py
+
+# 1. SETUP
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
-def load_and_process_data(filepath):
-    df = pd.read_csv(filepath, index_col='id_inquilino')
-    df.columns = [
-        'WakeUpTime', 'BedTime', 'PrayFrequency', 'PrayTime', 'StartDayWith', 
-        'StudyWorkTime', 'DietType', 'FoodAllergies', 'CuisineType', 'ProfessionField', 
-        'HobbiesInterests', 'FreeTimeSpent', 'EnvironmentPreference', 'SocialEvents', 
-        'Tidiness', 'SharingItems', 'RoomTemperature', 'MusicPreference', 'MusicFrequency', 
-        'RelaxationPreference'
-    ]
-    encoder = OneHotEncoder(sparse_output=False)
-    df_encoded = encoder.fit_transform(df)
-    return df, df_encoded
+# 2. CARGA DE DATOS
+df = pd.read_csv('dataset_inquilinos.csv', index_col = 'id_inquilino')
 
-def calculate_similarity(df_encoded):
-    similarity_matrix = np.dot(df_encoded, df_encoded.T)
-    range_min, range_max = 0, 100
-    min_original = np.min(similarity_matrix)
-    max_original = np.max(similarity_matrix)
-    rescaled_matrix = ((similarity_matrix - min_original) / (max_original - min_original)) * (range_max - range_min)
-    return pd.DataFrame(rescaled_matrix)
+df.columns = [
+'horario', 'bioritmo', 'nivel_educativo', 'leer', 'animacion', 
+'cine', 'mascotas', 'cocinar', 'deporte', 'dieta', 'fumador',
+'visitas', 'orden', 'musica_tipo', 'musica_alta', 'plan_perfecto', 'instrumento'
+]
 
-def find_compatible_tenants(df, df_similarity, tenant_ids, topn):
-    missing_ids = [id for id in tenant_ids if id not in df_similarity.index]
-    if missing_ids:
-        return f'The following tenant IDs were not found: {missing_ids}', None
+# 3. ONE HOT ENCODING
+# Realizar el one-hot encoding
+encoder = OneHotEncoder(sparse=False)
+df_encoded = encoder.fit_transform(df)
 
-    tenant_rows = df_similarity.loc[tenant_ids]
-    average_similarity = tenant_rows.mean(axis=0)
-    similar_tenants = average_similarity.sort_values(ascending=False).drop(tenant_ids)
-    top_tenants = similar_tenants.head(topn)
-    similar_records = df.loc[top_tenants.index]
-    searched_records = df.loc[tenant_ids]
-    result = pd.concat([searched_records.T, similar_records.T], axis=1)
-    similarity_series = pd.Series(data=top_tenants.values, index=top_tenants.index, name='Similarity')
+# Obtener los nombres de las variables codificadas después de realizar el one-hot encoding
+encoded_feature_names = encoder.get_feature_names_out()
 
-    return result, similarity_series
+# 4. MATRIZ DE SIMILIARIDAD
+# Calcular la matriz de similaridad utilizando el punto producto
+matriz_s = np.dot(df_encoded, df_encoded.T)
+
+# Define el rango de destino
+rango_min = -100
+rango_max = 100
+
+# Encontrar el mínimo y máximo valor en matriz_s
+min_original = np.min(matriz_s)
+max_original = np.max(matriz_s)
+
+# Reescalar la matriz
+matriz_s_reescalada = ((matriz_s - min_original) / (max_original - min_original)) * (rango_max - rango_min) + rango_min
+
+# Pasar a Pandas
+df_similaridad = pd.DataFrame(matriz_s_reescalada,
+        index = df.index,
+        columns = df.index)
+
+
+# 5. BÚSQUEDA DE INQUILINOS COMPATIBLES
+'''
+Input:
+* id_inquilinos: el o los inquilinos actuales DEBE SER UNA LISTA aunque sea solo un dato
+* topn: el número de inquilinos compatibles a buscar
+
+Output:
+Lista con 2 elementos.
+Elemento 0: las características de los inquilinos compatibles
+Elemento 1: el dato de similaridad
+'''
+
+def inquilinos_compatibles(id_inquilinos, topn):
+    # Verificar si todos los ID de inquilinos existen en la matriz de similaridad
+    for id_inquilino in id_inquilinos:
+        if id_inquilino not in df_similaridad.index:
+            return 'Al menos uno de los inquilinos no encontrado'
+
+    # Obtener las filas correspondientes a los inquilinos dados
+    filas_inquilinos = df_similaridad.loc[id_inquilinos]
+
+    # Calcular la similitud promedio entre los inquilinos
+    similitud_promedio = filas_inquilinos.mean(axis=0)
+
+    # Ordenar los inquilinos en función de su similitud promedio
+    inquilinos_similares = similitud_promedio.sort_values(ascending=False)
+
+    # Excluir los inquilinos de referencia (los que están en la lista)
+    inquilinos_similares = inquilinos_similares.drop(id_inquilinos)
+
+    # Tomar los topn inquilinos más similares
+    topn_inquilinos = inquilinos_similares.head(topn)
+
+    # Obtener los registros de los inquilinos similares
+    registros_similares = df.loc[topn_inquilinos.index]
+
+    # Obtener los registros de los inquilinos buscados
+    registros_buscados = df.loc[id_inquilinos]
+
+    # Concatenar los registros buscados con los registros similares en las columnas
+    resultado = pd.concat([registros_buscados.T, registros_similares.T], axis=1)
+
+    # Crear un objeto Series con la similitud de los inquilinos similares encontrados
+    similitud_series = pd.Series(data=topn_inquilinos.values, index=topn_inquilinos.index, name='Similitud')
+
+    # Devolver el resultado y el objeto Series
+    return(resultado, similitud_series)
+
