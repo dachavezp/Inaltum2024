@@ -1,24 +1,11 @@
 
 # 1. SETUP
-import openai
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
 # 2. CARGA DE DATOS
-def inquilinos_compatibles(id_inquilinos, topn):
-    try:
-        # Use a relative path to the CSV file
-        df = pd.read_csv('dataset_inquilinos.csv')
-        # Implement the logic to find compatible tenants
-        # This is a simple example returning an empty DataFrame and an empty list
-        resultado = (pd.DataFrame(), [])
-        return resultado
-    except Exception as e:
-        return str(e)
-print("Columnas actuales:", df.columns)
-print("Número de columnas actuales:", len(df.columns))
-df = df.drop(columns=['id_inquilino'])
+df = pd.read_csv('dataset_inquilinos.csv', index_col = 'id_inquilino')
 
 df.columns = [
 'horario', 'bioritmo', 'nivel_educativo', 'leer', 'animacion', 
@@ -28,7 +15,7 @@ df.columns = [
 
 # 3. ONE HOT ENCODING
 # Realizar el one-hot encoding
-encoder = OneHotEncoder(sparse_output=False) 
+encoder = OneHotEncoder(sparse=False)
 df_encoded = encoder.fit_transform(df)
 
 # Obtener los nombres de las variables codificadas después de realizar el one-hot encoding
