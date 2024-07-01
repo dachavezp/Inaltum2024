@@ -12,30 +12,22 @@ resultado = None
 st.image('./Media/portada.png', use_column_width=True)
 
 # Insertar un espacio vertical de 60px
-st.markdown(f'<div style="margin-top: 60px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="margin-top: 60px;"></div>', unsafe_allow_html=True)
 
-# Configurar el sidebar con inputs y un botón.
+# Configurar el sidebar con inputs.
 with st.sidebar:
-    st.header("¿Quién está viviendo ya en el piso?")
-    inquilino1 = st.text_input("Inquilino 1")
-    inquilino2 = st.text_input("Inquilino 2")
-    inquilino3 = st.text_input("Inquilino 3")
+    st.header("Por favor indicar el código de participante de las personas ya confirmadas en la habitación")
+    inquilino1 = st.text_input("Inquilino 1 (opcional)")
+    inquilino2 = st.text_input("Inquilino 2 (opcional)")
+    inquilino3 = st.text_input("Inquilino 3 (opcional)")
     
-    num_compañeros = st.text_input("¿Cuántos nuevos compañeros quieres buscar?")
-    
-    if st.button('BUSCAR NUEVOS COMPAÑEROS'):
-        # Verifica que el número de compañeros sea un valor válido
-        try:
-            topn = int(num_compañeros)
-        except ValueError:
-            st.error("Por favor, ingresa un número válido para el número de compañeros.")
-            topn = None
-        
+    if st.button('Buscar nuevos compañeros'):
         # Obtener los identificadores de inquilinos utilizando la función
-        id_inquilinos = obtener_id_inquilinos(inquilino1, inquilino2, inquilino3, topn)
+        id_inquilinos = obtener_id_inquilinos(inquilino1, inquilino2, inquilino3)
 
-        if id_inquilinos and topn is not None:
-            # Llama a la función inquilinos_compatibles con los parámetros correspondientes
+        if id_inquilinos:
+            topn = 4 - len(id_inquilinos)  # Calculate how many more roommates to find based on inputs
+            # Llamar a la función inquilinos_compatibles con los parámetros correspondientes
             resultado = inquilinos_compatibles(id_inquilinos, topn)
 
 # Verificar si 'resultado' contiene un mensaje de error (cadena de texto)
@@ -54,5 +46,3 @@ elif resultado is not None:
         st.write("Comparativa entre compañeros:")
         fig_tabla = generar_tabla_compatibilidad(resultado)
         st.plotly_chart(fig_tabla, use_container_width=True)
-
-
