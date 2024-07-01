@@ -4,13 +4,16 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
 # 2. CARGA DE DATOS
+# Load the dataset
 df = pd.read_csv('dataset_inquilinos.csv', index_col='id_inquilino')
 
 # Rename columns to meaningful names
 df.columns = [
-    'horario', 'bioritmo', 'nivel_educativo', 'leer', 'animacion', 
-    'cine', 'mascotas', 'cocinar', 'deporte', 'dieta', 'fumador',
-    'visitas', 'orden', 'musica_tipo', 'musica_alta', 'plan_perfecto', 'instrumento'
+    'WakeUpTime', 'BedTime', 'PrayFrequency', 'PrayTime', 'StartDayWith', 
+    'StudyWorkTime', 'DietType', 'FoodAllergies', 'CuisineType', 'ProfessionField', 
+    'HobbiesInterests', 'FreeTimeSpent', 'EnvironmentPreference', 'SocialEvents', 
+    'Tidiness', 'SharingItems', 'RoomTemperature', 'MusicPreference', 'MusicFrequency', 
+    'RelaxationPreference'
 ]
 
 # 3. ONE HOT ENCODING

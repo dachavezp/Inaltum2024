@@ -34,10 +34,10 @@ if 'resultado' in locals() and resultado is not None:
         # Create columns for layout
         cols = st.columns((1, 2))
         with cols[0]:
-            st.write("Nivel de compatibilidad de cada nuevo compañero:")
+            st.write("Compatibility level of each new roommate:")
             fig_grafico = generar_grafico_compatibilidad(resultado[1])
             st.pyplot(fig_grafico)
         with cols[1]:
-            st.write("Comparativa entre compañeros:")
+            st.write("Comparison between roommates:")
             fig_tabla = generar_tabla_compatibilidad(resultado)
             st.plotly_chart(fig_tabla, use_container_width=True)
