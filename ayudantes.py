@@ -7,7 +7,7 @@ import streamlit as st
 def generate_compatibility_chart(compatibility_series):
     if compatibility_series.empty:
         st.error("Compatibility data is empty.")
-        return
+        return None
 
     compatibility_series /= 100  # Scale to 0-1 for percentage
 
@@ -27,16 +27,15 @@ def generate_compatibility_chart(compatibility_series):
 def generate_compatibility_table(results):
     if results[0].empty:
         st.error("Results data is empty.")
-        return
+        return None
 
     results_with_index = results[0].reset_index()
     results_with_index.rename(columns={'index': 'Attribute'}, inplace=True)
     fig_table = go.Figure(data=[go.Table(
-        columnwidth=[180] + [120] * (len(results_with_index.columns) - 1),
         header=dict(values=list(results_with_index.columns), fill_color='brown', align='left', font=dict(color='white')),
         cells=dict(values=[results_with_index[col] for col in results_with_index.columns], fill_color='lightblue', align='left'))
     ])
-    fig_table.update_layout(width=800, height=400, margin=dict(l=0, r=0, t=0, b=0), title='Detailed Tenant Compatibility Table')
+    fig_table.update_layout(width=800, height=400, title='Detailed Tenant Compatibility Table')
     st.plotly_chart(fig_table)
 
 def get_tenant_ids(*tenants):
