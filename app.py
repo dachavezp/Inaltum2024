@@ -14,12 +14,13 @@ st.markdown('<div style="margin-top: 60px;"></div>', unsafe_allow_html=True)
 
 # Set up sidebar for input.
 with st.sidebar:
-    st.header("Por favor indicar el código de participante de las personas ya confirmadas en la habitación:")
-    inquilino1 = st.text_input("Inquilino 1 (opcional)")
-    inquilino2 = st.text_input("Inquilino 2 (opcional)")
-    inquilino3 = st.text_input("Inquilino 3 (opcional)")
+    st.header(
+"Please provide the participant code(s) already confirmed for the room:")
+    inquilino1 = st.text_input("Participant 1 (required)")
+    inquilino2 = st.text_input("Participant 2 (opcional)")
+    inquilino3 = st.text_input("Participant 3 (opcional)")
     
-    if st.button('Buscar nuevos compañeros'):
+    if st.button('Search for new roomate(s)'):
         id_inquilinos = obtener_id_inquilinos(inquilino1, inquilino2, inquilino3)
         if id_inquilinos:
             topn = 4 - len(id_inquilinos)  # Calculate how many more roommates to find
