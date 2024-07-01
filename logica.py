@@ -6,7 +6,16 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
 # 2. CARGA DE DATOS
-df = pd.read_csv('C:\\Users\\dartu\\Downloads\\Habitaciones\\dataset_inquilinos.csv')
+def inquilinos_compatibles(id_inquilinos, topn):
+    try:
+        # Use a relative path to the CSV file
+        df = pd.read_csv('dataset_inquilinos.csv')
+        # Implement the logic to find compatible tenants
+        # This is a simple example returning an empty DataFrame and an empty list
+        resultado = (pd.DataFrame(), [])
+        return resultado
+    except Exception as e:
+        return str(e)
 print("Columnas actuales:", df.columns)
 print("Número de columnas actuales:", len(df.columns))
 df = df.drop(columns=['id_inquilino'])
