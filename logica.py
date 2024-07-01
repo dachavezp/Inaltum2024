@@ -24,7 +24,7 @@ def calculate_similarity(df_encoded):
     rescaled_matrix = ((similarity_matrix - min_original) / (max_original - min_original)) * (range_max - range_min)
     return pd.DataFrame(rescaled_matrix)
 
-def find_compatible_tenants(df_similarity, tenant_ids, topn):
+def find_compatible_tenants(df, df_similarity, tenant_ids, topn):
     missing_ids = [id for id in tenant_ids if id not in df_similarity.index]
     if missing_ids:
         return f'The following tenant IDs were not found: {missing_ids}', None

@@ -20,7 +20,7 @@ with st.sidebar:
             if topn > 0:
                 df, df_encoded = load_and_process_data('dataset_inquilinos.csv')
                 df_similarity = calculate_similarity(df_encoded)
-                result, similarity_series = find_compatible_tenants(df_similarity, tenant_ids, topn)
+                result, similarity_series = find_compatible_tenants(df, df_similarity, tenant_ids, topn)
                 if isinstance(result, str):
                     st.error(result)
             else:
