@@ -24,22 +24,23 @@ with st.sidebar:
         if id_inquilinos:
             topn = 4 - len(id_inquilinos)  # Calculate how many more roommates to find
             if topn > 0:
-                resultado, similitud_series = inquilinos_compatibles(id_inquilinos, topn)
+                results = inquilinos_compatibles(id_inquilinos, topn)
+                if isinstance(results, str):  # Check if the function returned an error message.
+                    st.error(results)
+                else:
+                    resultado, similitud_series = results
             else:
                 st.error("Maximum number of participants reached. No additional roommates needed.")
 
 # Check results and display outside of the sidebar in the main body.
 if 'resultado' in locals() and resultado:
-    if isinstance(resultado, str):
-        st.error(resultado)
-    else:
-        # Create columns for layout
-        cols = st.columns((1, 2))
-        with cols[0]:
-            st.write("Compatibility level of each new roommate:")
-            fig_grafico = generar_grafico_compatibilidad(similitud_series)
-            st.pyplot(fig_grafico)
-        with cols[1]:
-            st.write("Comparison between roommates:")
-            fig_tabla = generar_tabla_compatibilidad(resultado)
-            st.plotly_chart(fig_tabla, use_container_width=True)
+    # Create columns for layout
+    cols = st.columns((1, 2))
+    with cols[0]:
+        st.write("Compatibility level of each new roommate:")
+        fig_grafico = generar_grafico_compatibilidad(similitud_series)
+        st.pyplot(fig_grafico)
+    with cols[1]:
+        st.write("Comparison between roommates:")
+        fig_tabla = generar_tabla_compatibilidad(resultado)
+        st.plotly_chart(fig_tabla, use_container_width=True)
