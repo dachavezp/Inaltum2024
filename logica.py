@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
+
 def load_and_process_data(filepath='dataset_inquilinos.csv'):
     df = pd.read_csv(filepath, index_col='id_inquilino')
     
@@ -21,8 +22,18 @@ def load_and_process_data(filepath='dataset_inquilinos.csv'):
     # Actualizar nombres de columnas
     df.columns = expected_columns
 
+    # Convertir todas las columnas a tipo string
+    df = df.astype(str)
+
+    # Mostrar los tipos de datos de cada columna para verificar
+    st.write("Tipos de datos de cada columna:", df.dtypes)
+
+    # Verificar que los datos sean válidos para el OneHotEncoder
+    if not all(df.dtypes == object):
+        raise ValueError("Todos los datos deben ser de tipo string (object) para el OneHotEncoder.")
+
     # Realizar el one-hot encoding
-    encoder = OneHotEncoder(sparse=False)
+    encoder = OneHotEncoder(sparse_output=False)
     df_encoded = encoder.fit_transform(df)
 
     return df, df_encoded
@@ -83,3 +94,4 @@ def inquilinos_compatibles(id_inquilinos, topn):
 
     # Devolver el resultado y el objeto Series
     return resultado, similitud_series
+print(df)
