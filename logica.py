@@ -1,72 +1,67 @@
-# logica.py
+
+# 1. SETUP
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
+# 2. CARGA DE DATOS
+df = pd.read_csv('dataset_inquilinos.csv', index_col = 'id_inquilino')
 
-def load_and_process_data(filepath='dataset_inquilinos.csv'):
-    df = pd.read_csv(filepath, index_col='id_inquilino')
-    
-    # Verificar la cantidad de columnas
-    expected_columns = [
-        'WakeUpTime', 'BedTime', 'PrayFrequency', 'PrayTime', 'StartDayWith', 
-        'StudyWorkTime', 'DietType', 'FoodAllergies', 'CuisineType', 'ProfessionField', 
-        'HobbiesInterests', 'FreeTimeSpent', 'EnvironmentPreference', 'SocialEvents', 
-        'Tidiness', 'SharingItems', 'RoomTemperature', 'MusicPreference', 'MusicFrequency', 
-        'RelaxationPreference'
-    ]
+df.columns = [
+'horario', 'bioritmo', 'nivel_educativo', 'leer', 'animacion', 
+'cine', 'mascotas', 'cocinar', 'deporte', 'dieta', 'fumador',
+'visitas', 'orden', 'musica_tipo', 'musica_alta', 'plan_perfecto', 'instrumento'
+]
 
-    if len(df.columns) != len(expected_columns):
-        raise ValueError(f"El archivo CSV debe tener exactamente {len(expected_columns)} columnas: {expected_columns}")
+# 3. ONE HOT ENCODING
+# Realizar el one-hot encoding
+encoder = OneHotEncoder(sparse=False)
+df_encoded = encoder.fit_transform(df)
 
-    # Actualizar nombres de columnas
-    df.columns = expected_columns
+# Obtener los nombres de las variables codificadas después de realizar el one-hot encoding
+encoded_feature_names = encoder.get_feature_names_out()
 
-    # Convertir todas las columnas a tipo string
-    df = df.astype(str)
+# 4. MATRIZ DE SIMILIARIDAD
+# Calcular la matriz de similaridad utilizando el punto producto
+matriz_s = np.dot(df_encoded, df_encoded.T)
 
-    # Mostrar los tipos de datos de cada columna para verificar
-    st.write("Tipos de datos de cada columna:", df.dtypes)
+# Define el rango de destino
+rango_min = -100
+rango_max = 100
 
-    # Verificar que los datos sean válidos para el OneHotEncoder
-    if not all(df.dtypes == object):
-        raise ValueError("Todos los datos deben ser de tipo string (object) para el OneHotEncoder.")
+# Encontrar el mínimo y máximo valor en matriz_s
+min_original = np.min(matriz_s)
+max_original = np.max(matriz_s)
 
-    # Realizar el one-hot encoding
-    encoder = OneHotEncoder(sparse_output=False)
-    df_encoded = encoder.fit_transform(df)
+# Reescalar la matriz
+matriz_s_reescalada = ((matriz_s - min_original) / (max_original - min_original)) * (rango_max - rango_min) + rango_min
 
-    return df, df_encoded
+# Pasar a Pandas
+df_similaridad = pd.DataFrame(matriz_s_reescalada,
+        index = df.index,
+        columns = df.index)
 
-def calculate_similarity(df_encoded):
-    # Calcular la matriz de similaridad utilizando el producto punto
-    matriz_s = np.dot(df_encoded, df_encoded.T)
 
-    # Definir el rango de destino
-    rango_min = -100
-    rango_max = 100
+# 5. BÚSQUEDA DE INQUILINOS COMPATIBLES
+'''
+Input:
+* id_inquilinos: el o los inquilinos actuales DEBE SER UNA LISTA aunque sea solo un dato
+* topn: el número de inquilinos compatibles a buscar
 
-    # Encontrar el mínimo y máximo valor en matriz_s
-    min_original = np.min(matriz_s)
-    max_original = np.max(matriz_s)
-
-    # Reescalar la matriz
-    matriz_s_reescalada = ((matriz_s - min_original) / (max_original - min_original)) * (rango_max - rango_min) + rango_min
-
-    # Convertir a Pandas DataFrame
-    return pd.DataFrame(matriz_s_reescalada, index=df.index, columns=df.index)
+Output:
+Lista con 2 elementos.
+Elemento 0: las características de los inquilinos compatibles
+Elemento 1: el dato de similaridad
+'''
 
 def inquilinos_compatibles(id_inquilinos, topn):
-    df, df_encoded = load_and_process_data()
-    df_similarity = calculate_similarity(df_encoded)
-    
     # Verificar si todos los ID de inquilinos existen en la matriz de similaridad
     for id_inquilino in id_inquilinos:
-        if id_inquilino not in df_similarity.index:
+        if id_inquilino not in df_similaridad.index:
             return 'Al menos uno de los inquilinos no encontrado'
 
     # Obtener las filas correspondientes a los inquilinos dados
-    filas_inquilinos = df_similarity.loc[id_inquilinos]
+    filas_inquilinos = df_similaridad.loc[id_inquilinos]
 
     # Calcular la similitud promedio entre los inquilinos
     similitud_promedio = filas_inquilinos.mean(axis=0)
@@ -93,5 +88,5 @@ def inquilinos_compatibles(id_inquilinos, topn):
     similitud_series = pd.Series(data=topn_inquilinos.values, index=topn_inquilinos.index, name='Similitud')
 
     # Devolver el resultado y el objeto Series
-    return resultado, similitud_series
-print(df)
+    return(resultado, similitud_series)
+

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from logica import inquilinos_compatibles, load_and_process_data
+from logica import inquilinos_compatibles
 from ayudantes import generar_grafico_compatibilidad, generar_tabla_compatibilidad, obtener_id_inquilinos
 
 # Configurar la página para utilizar un layout más amplio.
@@ -14,10 +14,6 @@ st.image('./Media/portada.png', use_column_width=True)
 # Insertar un espacio vertical de 60px
 st.markdown(f'<div style="margin-top: 60px;"></div>', unsafe_allow_html=True)
 
-# Mostrar los tipos de datos del archivo CSV
-df, _ = load_and_process_data()
-st.write("Tipos de datos de cada columna:", df.dtypes)
-
 # Configurar el sidebar con inputs y un botón.
 with st.sidebar:
     st.header("¿Quién está viviendo ya en el piso?")
@@ -25,12 +21,20 @@ with st.sidebar:
     inquilino2 = st.text_input("Inquilino 2")
     inquilino3 = st.text_input("Inquilino 3")
     
+    num_compañeros = st.text_input("¿Cuántos nuevos compañeros quieres buscar?")
+    
     if st.button('BUSCAR NUEVOS COMPAÑEROS'):
-        topn = 4  # Número fijo de nuevos compañeros de habitación
+        # Verifica que el número de compañeros sea un valor válido
+        try:
+            topn = int(num_compañeros)
+        except ValueError:
+            st.error("Por favor, ingresa un número válido para el número de compañeros.")
+            topn = None
+        
         # Obtener los identificadores de inquilinos utilizando la función
-        id_inquilinos = obtener_id_inquilinos(inquilino1, inquilino2, inquilino3)
+        id_inquilinos = obtener_id_inquilinos(inquilino1, inquilino2, inquilino3, topn)
 
-        if id_inquilinos:
+        if id_inquilinos and topn is not None:
             # Llama a la función inquilinos_compatibles con los parámetros correspondientes
             resultado = inquilinos_compatibles(id_inquilinos, topn)
 
@@ -50,3 +54,5 @@ elif resultado is not None:
         st.write("Comparativa entre compañeros:")
         fig_tabla = generar_tabla_compatibilidad(resultado)
         st.plotly_chart(fig_tabla, use_container_width=True)
+
+
