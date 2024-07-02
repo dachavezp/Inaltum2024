@@ -16,7 +16,7 @@ df.columns = [
 
 # ONE HOT ENCODING
 # Realizar el one-hot encoding para convertir categorías en variables binarias
-encoder = OneHotEncoder(sparse=False)
+encoder = OneHotEncoder(sparse_output=False)
 df_encoded = encoder.fit_transform(df)
 encoded_feature_names = encoder.get_feature_names_out()  # Nombres de características después del encoding
 
