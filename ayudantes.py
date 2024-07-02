@@ -6,14 +6,15 @@ import streamlit as st
 # FUNCIÓN PARA GENERAR EL GRÁFICO DE COMPATIBILIDAD
 def generar_grafico_compatibilidad(compatibilidad):
     fig, ax = plt.subplots(figsize=(5, 4))
+    compatibilidad = compatibilidad.abs()
     sns.barplot(x=compatibilidad.index, y=compatibilidad.values, ax=ax, color='lightblue')
     sns.despine()
     ax.set_xlabel('Identificador de Inquilino', fontsize=10)
     ax.set_ylabel('Similitud (%)', fontsize=10)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    ax.set_yticklabels(['{:.1f}%'.format(y * 100) for y in ax.get_yticks()])
+    ax.set_yticklabels(['{:.1f}%'.format(y * 1) for y in ax.get_yticks()])
     for p in ax.patches:
-        ax.annotate(f'{p.get_height()*100:.1f}%', (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 5), textcoords='offset points')
+        ax.annotate(f'{p.get_height()*1:.1f}%', (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 5), textcoords='offset points')
     return fig
 
 # FUNCIÓN PARA GENERAR LA TABLA DE COMPAÑEROS
