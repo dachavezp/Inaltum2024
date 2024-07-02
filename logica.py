@@ -1,51 +1,68 @@
+# SETUP
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
-# Load and prepare data
+# CARGA DE DATOS
 df = pd.read_csv('dataset_inquilinos.csv', index_col='id_inquilino')
+
 df.columns = [
-    'horario', 'bioritmo', 'nivel_educativo', 'leer', 'animacion',
-    'cine', 'mascotas', 'cocinar', 'deporte', 'dieta', 'fumador',
-    'visitas', 'orden', 'musica_tipo', 'musica_alta', 'plan_perfecto', 'instrumento'
+        'Wake Up Time', 'Bed Time', 'Pray Frequency', 'Pray Time', 'Start Day With',
+    'Study/Work Time', 'Diet Type', 'Food Allergies', 'Cuisine Type',
+    'Profession/Field of Study', 'Hobbies/Interests', 'Free Time Spent',
+    'Environment Preference', 'Social Events Attendance', 'Tidiness',
+    'Sharing Personal Items', 'Room Temperature Preference'
 ]
 
-# One-hot encoding
+# ONE HOT ENCODING
+# Realizar el one-hot encoding para convertir categorías en variables binarias
 encoder = OneHotEncoder(sparse=False)
 df_encoded = encoder.fit_transform(df)
-encoded_feature_names = encoder.get_feature_names_out()
+encoded_feature_names = encoder.get_feature_names_out()  # Nombres de características después del encoding
 
-# Similarity matrix
+# MATRIZ DE SIMILARIDAD
+# Calcular la matriz de similaridad usando producto punto
 matriz_s = np.dot(df_encoded, df_encoded.T)
-min_original = np.min(matriz_s)
-max_original = np.max(matriz_s)
+
+# Escala de la matriz para valores entre -100 y 100
 rango_min, rango_max = -100, 100
+min_original, max_original = np.min(matriz_s), np.max(matriz_s)
 matriz_s_reescalada = ((matriz_s - min_original) / (max_original - min_original)) * (rango_max - rango_min) + rango_min
+
+# Convertir a DataFrame para fácil manipulación
 df_similaridad = pd.DataFrame(matriz_s_reescalada, index=df.index, columns=df.index)
 
-# Function to find compatible tenants
-def inquilinos_compatibles(id_inquilinos):
-    # Verify each ID in the similarity matrix
-    if not set(id_inquilinos).issubset(df_similaridad.index):
-        return "At least one of the tenants was not found", None
+# FUNCIÓN PARA ENCONTRAR INQUILINOS COMPATIBLES
+def inquilinos_compatibles(id_inquilinos, topn):
+    """
+    Encuentra inquilinos compatibles basados en similaridad.
     
-    # Get rows for the given tenants
+    Args:
+    - id_inquilinos (list): IDs de los inquilinos actuales.
+    - topn (int): Número de inquilinos compatibles a buscar.
+    
+    Returns:
+    - tuple: Contiene dos elementos, un DataFrame con las características de los inquilinos compatibles
+             y una Serie con los datos de similaridad.
+    """
+    # Verificar existencia de IDs de inquilinos
+    if not set(id_inquilinos).issubset(df_similaridad.index):
+        return 'Al menos uno de los inquilinos no encontrado'
+
+    # Calcular similaridad promedio
     filas_inquilinos = df_similaridad.loc[id_inquilinos]
-
-    # Calculate average similarity
     similitud_promedio = filas_inquilinos.mean(axis=0)
+    inquilinos_similares = similitud_promedio.sort_values(ascending=False).drop(id_inquilinos)
 
-    # Sort tenants based on average similarity and exclude known tenants
-    topn = 4 - len(id_inquilinos)  # Determine how many more tenants are needed
-    inquilinos_similares = similitud_promedio.drop(id_inquilinos).sort_values(ascending=False).head(topn)
+    # Seleccionar los topn más similares, excluyendo los ya presentes
+    topn_inquilinos = inquilinos_similares.head(topn)
+    registros_similares = df.loc[topn_inquilinos.index]
 
-    # Get records for similar and existing tenants
-    registros_similares = df.loc[inquilinos_similares.index]
+    # Combinar datos de inquilinos actuales y similares
     registros_buscados = df.loc[id_inquilinos]
-
-    # Concatenate results
     resultado = pd.concat([registros_buscados.T, registros_similares.T], axis=1)
-    similitud_series = pd.Series(data=inquilinos_similares.values, index=inquilinos_similares.index, name='Similitud')
 
-    return resultado, similitud_series
+    # Serie de similaridad para los inquilinos seleccionados
+    similitud_series = pd.Series(topn_inquilinos.values, index=topn_inquilinos.index, name='Similitud')
 
+    return (resultado, similitud_series)
